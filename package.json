@@ -1,0 +1,9 @@
+{
+  "name": "portfolio-cio-windows",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.0.0"
+  },
+  "description": "Local read-only Portfolio CIO for Zerodha Kite MCP"
+}

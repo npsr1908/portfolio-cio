@@ -1,0 +1,166 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Portfolio CIO</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+<div id="homePage" class="home-page">
+  <div class="home-orb orb-a"></div>
+  <div class="home-orb orb-b"></div>
+  <div class="home-grid"></div>
+  <div class="market-visual" aria-hidden="true">
+    <svg class="market-chart" viewBox="0 0 1200 420" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="chartStroke" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" stop-color="#7b3ff2"/>
+          <stop offset=".52" stop-color="#4f7cff"/>
+          <stop offset="1" stop-color="#10d7ff"/>
+        </linearGradient>
+        <linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" stop-color="#3c7cff" stop-opacity=".28"/>
+          <stop offset="1" stop-color="#3c7cff" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <path class="chart-fill" d="M0 330 L70 306 L120 316 L170 282 L220 294 L270 250 L320 266 L370 220 L420 238 L470 186 L520 205 L570 158 L620 170 L670 120 L720 142 L770 104 L820 116 L870 72 L920 88 L970 48 L1020 66 L1070 28 L1120 48 L1200 12 L1200 420 L0 420 Z"/>
+      <polyline class="chart-glow" points="0,330 70,306 120,316 170,282 220,294 270,250 320,266 370,220 420,238 470,186 520,205 570,158 620,170 670,120 720,142 770,104 820,116 870,72 920,88 970,48 1020,66 1070,28 1120,48 1200,12"/>
+      <polyline class="chart-line" points="0,330 70,306 120,316 170,282 220,294 270,250 320,266 370,220 420,238 470,186 520,205 570,158 620,170 670,120 720,142 770,104 820,116 870,72 920,88 970,48 1020,66 1070,28 1120,48 1200,12"/>
+    </svg>
+    <div class="ticker-bars">
+      <span style="height:18%"></span><span style="height:25%"></span><span style="height:20%"></span>
+      <span style="height:31%"></span><span style="height:26%"></span><span style="height:38%"></span>
+      <span style="height:34%"></span><span style="height:44%"></span><span style="height:41%"></span>
+      <span style="height:50%"></span><span style="height:47%"></span><span style="height:58%"></span>
+      <span style="height:54%"></span><span style="height:66%"></span><span style="height:61%"></span>
+      <span style="height:72%"></span><span style="height:68%"></span><span style="height:82%"></span>
+      <span style="height:77%"></span><span style="height:90%"></span>
+    </div>
+    <div class="market-scan"></div>
+  </div>
+  <div class="home-stars"></div>
+  <div class="floating-tickers ticker-left" aria-hidden="true">
+    <span>BSE <b>+2.8%</b></span><span>NIFTY 50 <b>+1.2%</b></span><span>IT <b>+0.9%</b></span>
+  </div>
+  <div class="floating-tickers ticker-right" aria-hidden="true">
+    <span>DEFENCE <b>+3.4%</b></span><span>ENERGY <b>+1.7%</b></span><span>BANKS <b>+0.6%</b></span>
+  </div>
+  <div class="home-candles candles-left" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="home-candles candles-right" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div class="sentiment-beast bull-beast" aria-hidden="true">
+    <div class="beast-glow"></div>
+    <div class="beast-head bull-outline">
+      <span class="horn horn-left"></span><span class="horn horn-right"></span>
+      <span class="eye eye-left"></span><span class="eye eye-right"></span>
+      <span class="muzzle"></span>
+    </div>
+    <div class="beast-arrow">↗</div>
+    <div class="beast-spark s1"></div><div class="beast-spark s2"></div><div class="beast-spark s3"></div>
+    <div class="beast-label">BULL</div>
+  </div>
+
+  <div class="sentiment-beast bear-beast" aria-hidden="true">
+    <div class="beast-glow"></div>
+    <div class="beast-head bear-outline">
+      <span class="ear ear-left"></span><span class="ear ear-right"></span>
+      <span class="eye eye-left"></span><span class="eye eye-right"></span>
+      <span class="muzzle"></span>
+    </div>
+    <div class="beast-arrow">↘</div>
+    <div class="beast-spark s1"></div><div class="beast-spark s2"></div><div class="beast-spark s3"></div>
+    <div class="beast-label">BEAR</div>
+  </div>
+
+  <div class="market-insight-row" aria-hidden="true">
+    <div class="market-insight insight-green"><span class="mi-label">MARKET SENTIMENT</span><strong>BULLISH</strong><span class="mi-wave"></span></div>
+    <div class="market-insight insight-blue"><span class="mi-label">PORTFOLIO HEALTH</span><strong>GOOD</strong><span class="mi-wave"></span></div>
+    <div class="market-insight insight-yellow"><span class="mi-label">RISK SCORE</span><strong>MODERATE</strong><span class="mi-wave"></span></div>
+    <div class="market-insight insight-purple"><span class="mi-label">OPPORTUNITY</span><strong>HIGH</strong><span class="mi-wave"></span></div>
+  </div>
+  <div class="home-copyright" aria-hidden="true">© Portfolio CIO</div>
+
+  <div class="market-particles" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+  <div class="flow-dots flow-left" aria-hidden="true"></div>
+  <div class="flow-dots flow-right" aria-hidden="true"></div>
+  <div class="home-content">
+    <div class="home-kicker">PORTFOLIO INTELLIGENCE</div>
+    <h1>SMART <span>PORTFOLIO ANALYSER</span></h1>
+    <p>Understand. Analyze. Grow.</p>
+    <button id="getStarted" class="home-cta">
+      <span class="cta-icon">🚀</span>
+      <span>Let's Get Started</span>
+    </button>
+    <div id="homeStatus" class="home-status"></div>
+  </div>
+</div>
+
+<div id="appShell" class="app" style="display:none">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark" aria-label="CIO">CIO</div><div><b>Portfolio CIO</b><small>Chief Investment Officer · CIO 1.0</small></div></div>
+    <nav>
+      <button class="nav active" data-view="dashboard"><span class="nav-icon">◈</span><span>Dashboard</span></button>
+      <button class="nav" data-view="holdings"><span class="nav-icon">▦</span><span>Holdings</span></button>
+      <button class="nav" data-view="research"><span class="nav-icon">⌕</span><span>Research Stock</span></button>
+      <button class="nav" data-view="compare"><span class="nav-icon">⇄</span><span>Compare</span></button>
+      <button class="nav" data-view="opportunities"><span class="nav-icon">✦</span><span>Opportunities</span></button>
+      <button class="nav" data-view="rebalance"><span class="nav-icon">↻</span><span>Rebalance</span></button>
+    </nav>
+    <div class="sidebar-cio-analyst" aria-label="CIO market analyst">
+      <div class="cio-analyst-visual">
+        <span class="cio-spark s1"></span><span class="cio-spark s2"></span><span class="cio-spark s3"></span>
+        <div class="cio-avatar-head"></div>
+        <div class="cio-avatar-body"><span class="cio-tie"></span></div>
+      </div>
+      <div class="cio-analyst-copy">
+        <b>CIO Market Analyst</b>
+        <small>Watching risk · trend · allocation</small>
+      </div>
+    </div>
+    <div class="sidebar-foot">
+      <span class="dot"></span> <span class="live-mode-label">Live mode</span>
+      <small>Connected to Zerodha via Kite MCP</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">PORTFOLIO INTELLIGENCE</div>
+        <h1 id="pageTitle">Portfolio Dashboard</h1>
+      </div>
+      <div class="top-actions">
+        <span id="asOf" class="muted"></span>
+        <span id="kiteStatus" class="status connected">Kite MCP: Connected</span>
+        <div class="connection-wrap">
+          <button id="reanalyze" class="primary">↻ Re-sync</button>
+          <button id="relogin" class="secondary">↪ Re-login</button>
+          <button id="logout" class="secondary">⎋ Logout</button>
+        </div>
+      </div>
+    </header>
+
+    <div id="kiteAuthNotice" class="note" style="display:none;margin-bottom:14px"></div>
+    <section id="dashboard" class="view active"></section>
+    <section id="holdings" class="view"></section>
+    <section id="research" class="view"></section>
+    <section id="compare" class="view"></section>
+    <section id="opportunities" class="view"></section>
+    <section id="rebalance" class="view"></section>
+  </main>
+</div>
+<div id="toast"></div>
+<script src="/static/app.js"></script>
+</body>
+</body>
+</html>
