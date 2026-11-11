@@ -85,23 +85,81 @@ function extractLoginLink(result) {
   };
 }
 
+async function getAdvertisedTools() {
+  const { tools = [] } = await client.listTools();
+  return tools;
+}
+
+function resultText(result) {
+  return Array.isArray(result?.content)
+    ? result.content.filter(x => x?.type === "text").map(x => x.text || "").join("\n")
+    : "";
+}
+
+function parseResult(result) {
+  if (result?.structuredContent && typeof result.structuredContent === "object") return result.structuredContent;
+  const text = resultText(result);
+  try { return JSON.parse(text); } catch { return null; }
+}
+
+function groupedCall(name, args, tools) {
+  const names = new Set(tools.map(tool => tool?.name));
+  if (names.has(name)) return { name, arguments:args };
+  const portfolioMode = {
+    get_profile:"profile", get_margins:"margins", get_holdings:"holdings",
+    get_positions:"positions"
+  }[name];
+  if (portfolioMode && names.has("portfolio")) {
+    return { name:"portfolio", arguments:{ ...args, mode:portfolioMode } };
+  }
+  if (name === "get_mf_holdings" && names.has("mutual_funds")) {
+    return { name:"mutual_funds", arguments:{ mode:"holdings" } };
+  }
+  const marketMode = {
+    get_ltp:"ltp", get_ohlc:"ohlc", get_quotes:"quote",
+    get_historical_data:"historical", search_instruments:"search"
+  }[name];
+  if (marketMode && names.has("market")) {
+    const mapped = { ...args, mode:marketMode };
+    if (name === "get_ltp" || name === "get_ohlc" || name === "get_quotes") {
+      mapped.instruments = args.instruments || args.instrument || args.tradingsymbols || args.symbols || [];
+      delete mapped.instrument;
+      delete mapped.tradingsymbols;
+      delete mapped.symbols;
+    }
+    if (name === "search_instruments") {
+      mapped.query = args.query || args.search || args.q || args.keyword || args.term || args.symbol || args.name || "";
+      mapped.filter_on = args.filter_on || "tradingsymbol";
+    }
+    return { name:"market", arguments:mapped };
+  }
+  throw new Error(`Kite MCP tool ${name} is unavailable. Advertised tools: ${[...names].join(", ")}`);
+}
+
 export async function login() {
   if (!client) await connectKite();
-
-  const result = await client.callTool({ name:"login", arguments:{} });
-  const info = extractLoginLink(result);
-
-  // The login tool first returns an authorization link. That does NOT mean
-  // the account is authenticated yet. The user must open the link in a browser,
-  // complete Zerodha authentication, then the client can call login/get_holdings again.
-  authenticated = false;
-
+  const tools = await getAdvertisedTools();
+  const names = tools.map(tool => tool?.name).filter(Boolean);
+  const loginTool = names.find(name => /^login$/i.test(name)) ||
+    names.find(name => /(^|[-_])(login|authorize|authentication|auth)([-_]|$)/i.test(name));
+  if (loginTool) {
+    const result = await client.callTool({ name:loginTool, arguments:{} });
+    const info = extractLoginLink(result);
+    authenticated = false;
+    return { raw:result, message:info.text, loginLink:info.link, needsUserAction:!!info.link, authenticated:false };
+  }
+  if (!names.includes("session")) {
+    throw new Error(`Kite MCP connected, but no supported login or session status tool is available. Tools: ${names.join(", ")}`);
+  }
+  const result = await client.callTool({ name:"session", arguments:{mode:"status"} });
+  const session = parseResult(result) || {};
+  authenticated = !!session.authenticated;
   return {
-    raw: result,
-    message: info.text,
-    loginLink: info.link,
-    needsUserAction: !!info.link,
-    authenticated: false
+    raw:result,
+    message:authenticated ? "Kite MCP session is authenticated." : "Kite MCP OAuth connection completed, but the Kite session is not authenticated. Close and retry login.",
+    loginLink:null,
+    needsUserAction:!authenticated,
+    authenticated
   };
 }
 
@@ -149,7 +207,9 @@ export async function callReadOnlyTool(name, args={}) {
     try {
       if (!client) await connectKite();
 
-      const r = await client.callTool({ name, arguments: args });
+      const tools = await getAdvertisedTools();
+      const call = groupedCall(name, args, tools);
+      const r = await client.callTool(call);
       const text = Array.isArray(r?.content)
         ? r.content.filter(x => x?.type === "text").map(x => x.text).join("\n")
         : "";
@@ -201,10 +261,26 @@ export async function verifyAuthenticated() {
   if (!client) await connectKite();
 
   try {
+    const tools = await getAdvertisedTools();
+    if (tools.some(tool => tool?.name === "session")) {
+      const sessionResult = await client.callTool({ name:"session", arguments:{mode:"status"} });
+      const session = parseResult(sessionResult) || {};
+      if (sessionResult?.isError || !session.authenticated) {
+        authenticated = false;
+        return { authenticated:false, stage:"session", result:sessionResult, message:"Kite MCP session is not authenticated." };
+      }
+      const profile = await callReadOnlyTool("get_profile", {});
+      const holdings = await callReadOnlyTool("get_holdings", {});
+      authenticated = true;
+      return { authenticated:true, session:sessionResult, profile, holdings };
+    }
     // After the user completes the browser OAuth flow, Kite MCP expects the
     // login tool to be checked again on the SAME MCP client session. If it still
     // returns an authorization link, the browser login is not complete yet.
-    const loginCheck = await client.callTool({ name:"login", arguments:{} });
+    const loginTool = tools.map(tool => tool?.name).find(name => /^login$/i.test(name)) ||
+      tools.map(tool => tool?.name).find(name => /(^|[-_])(login|authorize|authentication|auth)([-_]|$)/i.test(name));
+    if (!loginTool) throw new Error(`Kite MCP has no supported session status or login tool. Tools: ${tools.map(tool=>tool?.name).filter(Boolean).join(", ")}`);
+    const loginCheck = await client.callTool({ name:loginTool, arguments:{} });
     const loginText = Array.isArray(loginCheck?.content)
       ? loginCheck.content.filter(x=>x?.type==="text").map(x=>x.text||"").join("\n")
       : "";

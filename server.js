@@ -390,6 +390,17 @@ function histArgs(schema,token,fromDate,toDate){
   if(p.oi)a.oi=false;
   return a;
 }
+function findKiteTool(tools,name){
+  const list=Array.isArray(tools)?tools:[];
+  const direct=list.find(x=>x?.name===name);
+  if(direct)return direct;
+  const group={
+    get_profile:"portfolio",get_margins:"portfolio",get_holdings:"portfolio",get_positions:"portfolio",
+    get_mf_holdings:"mutual_funds",get_ltp:"market",get_ohlc:"market",get_quotes:"market",
+    get_historical_data:"market",search_instruments:"market"
+  }[name];
+  return group?list.find(x=>x?.name===group):undefined;
+}
 const server = http.createServer(async (req,res) => {
   const parsed = url.parse(req.url, true);
   const pathname = parsed.pathname;
@@ -477,6 +488,13 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
   try{
     const r=await fetch("/api/kite/login-target",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
     const j=await r.json();
+    if(j.authenticated){
+      document.querySelector("h1").textContent="Kite connection is ready";
+      document.querySelector("p").textContent="Portfolio CIO verified the authenticated Zerodha session. You can return to the dashboard.";
+      document.querySelector(".note").textContent="This tab will close automatically.";
+      setTimeout(()=>window.close(),1800);
+      return;
+    }
     if(!j.loginLink) throw new Error(j.message||"Kite did not return a Zerodha authorization URL.");
     activate("s2"); activate("s3");
     setTimeout(()=>location.replace(j.loginLink),350);
@@ -498,8 +516,11 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
         await ks.connectKite();
         const r = await ks.login();
         const loginLink = r?.loginLink;
+        if (r?.authenticated) {
+          return json(res,200,{status:"ok",authenticated:true,needsUserAction:false,message:r.message});
+        }
         if(!loginLink) {
-          return json(res,500,{status:"error",message:"Kite did not return a Zerodha authorization URL.",raw:r});
+          return json(res,401,{status:"error",authenticated:false,message:r?.message||"Kite session is not authenticated. Complete the Kite authorization flow and retry."});
         }
         return json(res,200,{status:"ok",loginLink,needsUserAction:r.needsUserAction,message:r.message});
       } catch (e) {
@@ -514,7 +535,7 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
         const r = await ks.login();
         return json(res,200,{
           status:"ok",
-          authenticated:false,
+          authenticated:!!r.authenticated,
           loginLink:r.loginLink,
           needsUserAction:r.needsUserAction,
           message:r.message
@@ -686,7 +707,7 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
       (async()=>{
         try{
           const ks=await loadKiteService(), tools=await ks.listTools();
-          const hs=(tools.tools||[]).find(x=>x.name==="get_historical_data");
+          const hs=findKiteTool(tools.tools,"get_historical_data");
           const to=new Date(), from=new Date(to); from.setDate(from.getDate()-420);
           const fromDate=from.toISOString().slice(0,19).replace("T"," ");
           const toDate=to.toISOString().slice(0,19).replace("T"," ");
@@ -799,7 +820,7 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
           // This avoids the previous 3-worker burst that caused 429s.
           ks=await loadKiteService();
           const tools=await ks.listTools();
-          hs=(tools.tools||[]).find(x=>x.name==="get_historical_data");
+          hs=findKiteTool(tools.tools,"get_historical_data");
           if(!hs) throw new Error("Kite MCP get_historical_data tool is unavailable.");
 
           for(let i=0;i<symbols.length;i++){
@@ -936,7 +957,7 @@ const activate=id=>document.getElementById(id)?.classList.add("active");
 
     if (req.method==="POST" && pathname==="/api/technical") {
       const b=await body(req), symbol=String(b.symbol||"").toUpperCase(), ks=await loadKiteService();
-      const tools=await ks.listTools(), hs=(tools.tools||[]).find(x=>x.name==="get_historical_data");
+      const tools=await ks.listTools(), hs=findKiteTool(tools.tools,"get_historical_data");
       let token=b.instrument_token;
       let resolvedExchange=b.exchange||"NSE";
       if(!token){
@@ -1719,7 +1740,7 @@ function normalizeInstrumentResults(result,symbol){
         const ks=await loadKiteService();
         await ks.connectKite();
         const tools=await ks.listTools();
-        const searchTool=(tools.tools||[]).find(x=>x.name==="search_instruments");
+        const searchTool=findKiteTool(tools.tools,"search_instruments");
         if(!searchTool){
           return json(res,503,{status:"error",message:"Kite MCP instrument search is unavailable."});
         }
@@ -1745,7 +1766,7 @@ function normalizeInstrumentResults(result,symbol){
         let quote=null;
         if(instrument.instrument_token){
           try{
-            const ltpTool=(tools.tools||[]).find(x=>x.name==="get_ltp");
+            const ltpTool=findKiteTool(tools.tools,"get_ltp");
             if(ltpTool){
               const lp=ltpTool.inputSchema?.properties||{};
               const key=Object.keys(lp).find(k=>/instrument|trad/.test(k));
